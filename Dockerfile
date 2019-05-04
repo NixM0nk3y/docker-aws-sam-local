@@ -1,18 +1,20 @@
-FROM alpine:3.6
+FROM alpine:3.9
 
-ENV VERSION=0.2.2
+LABEL maintainer="Nick Gregory <docker@openenterprise.co.uk>"
 
-RUN apk add --no-cache curl && \
-    curl -sSLO https://github.com/awslabs/aws-sam-local/releases/download/v${VERSION}/sam_${VERSION}_linux_386.tar.gz && \
-    tar -C /usr/local/bin -zxvf /sam_${VERSION}_linux_386.tar.gz && \
-    apk del curl && \
-    rm -f /sam_${VERSION}_linux_386.tar.gz
-
-# awscli for "sam package" and "sam deploy"
-RUN apk add --no-cache py-pip && pip install awscli
+RUN apk add --no-cache --virtual .build-deps \
+        gcc \
+        python-dev \
+        musl-dev \
+    && apk add --no-cache \
+        py-pip \
+    && pip install awscli \
+    && pip install aws-sam-cli \
+    && apk del .build-deps \
+&& rm -rf /var/cache/apk/*
 
 WORKDIR /var/opt
 
 EXPOSE 3000
 
-ENTRYPOINT ["/usr/local/bin/sam"]
+ENTRYPOINT ["/usr/bin/sam"]
